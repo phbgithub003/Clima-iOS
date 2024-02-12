@@ -8,8 +8,16 @@
 
 import Foundation
 
-struct weatherManager {
-    let url = "https://api.openweathermap.org/data/2.5/weather?appid={openweathermap_appid}&units=metric&q="
+protocol WeatherManagerDelegate {
+    func didUpdateWeather(weather: WeatherModel)
+}
+
+
+struct WeatherManager {
+    
+    let url = "https://api.openweathermap.org/data/2.5/weather?appid={appid}&units=metric&q="
+    
+    var delegate: WeatherManagerDelegate?
     
     func getCityWeather(_ city :String) {
         let urlString = "\(url)\(city)"
@@ -28,21 +36,29 @@ struct weatherManager {
                 return
             }
             if let data = data{
-                parseJson(weatherData: data)
+                if let weather = parseJson(weatherData: data) {
+                    delegate?.didUpdateWeather(weather: weather)
+                }
             }
         }
         task.resume()
         
     }
     
-    func parseJson(weatherData: Data ) {
+    func parseJson(weatherData: Data )-> WeatherModel? {
         let decoder = JSONDecoder()
         do {
             let decodeData = try decoder.decode(WeatherData.self, from: weatherData)
-            print(decodeData.main.temp)
-            print(decodeData.weather[0].description)
+            let temp = decodeData.main.temp
+            let id = decodeData.weather[0].id
+            let city = decodeData.name
+            
+            let weather = WeatherModel(conditionId: id, cityName: city, temperature: temp)
+            return weather
+             
         } catch {
             print(error)
+            return nil
         }
     }
     

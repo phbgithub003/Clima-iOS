@@ -15,9 +15,10 @@ class WeatherViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var cityLabel: UILabel!
     @IBOutlet weak var searchTF: UITextField!
     
-    var weatherMan = weatherManager()
+    var weatherManger = WeatherManager(delegate: nil)
     override func viewDidLoad() {
         super.viewDidLoad()
+        weatherManger.delegate = self
         searchTF.delegate = self
         // Do any additional setup after loading the view.
     }
@@ -44,10 +45,21 @@ class WeatherViewController: UIViewController, UITextFieldDelegate {
     
     func textFieldDidEndEditing(_ textField: UITextField) {
         if let city = searchTF.text{
-            weatherMan.getCityWeather(city)
+            weatherManger.getCityWeather(city)
         }
         
         searchTF.text = ""
     }
 }
 
+extension WeatherViewController: WeatherManagerDelegate{
+    func didUpdateWeather(weather: WeatherModel) {
+        DispatchQueue.main.async {
+            self.temperatureLabel.text = weather.temperatureString
+            self.cityLabel.text = weather.cityName
+            self.conditionImageView.image = UIImage(systemName: weather.conditionName)
+        }
+    }
+    
+    
+}
